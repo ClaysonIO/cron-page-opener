@@ -9,6 +9,7 @@ export interface ScheduledPage {
 export interface Settings {
   id?: number;
   cronExpression: string;
+  darkMode: boolean;
 }
 
 export class AppDatabase extends Dexie {
@@ -19,7 +20,7 @@ export class AppDatabase extends Dexie {
     super('PageOpenerDB');
     this.version(1).stores({
       pages: '++id, url, lastOpened',
-      settings: '++id, cronExpression'
+      settings: '++id, cronExpression, darkMode'
     });
   }
 }
@@ -31,7 +32,8 @@ export async function initializeDefaults() {
   const settingsCount = await db.settings.count();
   if (settingsCount === 0) {
     await db.settings.add({
-      cronExpression: '*/5 * * * *'
+      cronExpression: '*/5 * * * *',
+      darkMode: false
     });
   }
 }

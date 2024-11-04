@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import parser from 'cron-parser'
 import {
   AppBar,
@@ -14,9 +14,14 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
-  Box
+  Box,
+  ThemeProvider,
+  createTheme,
+  CssBaseline
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
+import Brightness4Icon from '@mui/icons-material/Brightness4'
+import Brightness7Icon from '@mui/icons-material/Brightness7'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, initializeDefaults, ScheduledPage } from './db'
 
@@ -61,9 +66,23 @@ function App() {
   const pages = useLiveQuery(() => db.pages.toArray()) ?? [];
   const settings = useLiveQuery(() => db.settings.toArray()) ?? [];
   const cronExpression = settings[0]?.cronExpression ?? '*/5 * * * *';
+  const darkMode = settings[0]?.darkMode ?? false;
   const [nextRunTime, setNextRunTime] = useState<Date | null>(null);
   const [newUrl, setNewUrl] = useState<string>('');
   const [timeUntil, setTimeUntil] = useState<ReturnType<typeof getTimeUntil>>(null);
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: darkMode ? 'dark' : 'light',
+          primary: {
+            main: '#8B0000',
+          },
+        },
+      }),
+    [darkMode]
+  );
 
   useEffect(() => {
     initializeDefaults();
@@ -135,117 +154,134 @@ function App() {
   const updateCronExpression = async (expression: string) => {
     if (settings[0]?.id) {
       await db.settings.update(settings[0].id, {
+        ...settings[0],
         cronExpression: expression
       });
     } else {
       await db.settings.add({
-        cronExpression: expression
+        cronExpression: expression,
+        darkMode: false
+      });
+    }
+  };
+
+  const toggleDarkMode = async () => {
+    if (settings[0]?.id) {
+      await db.settings.update(settings[0].id, {
+        ...settings[0],
+        darkMode: !darkMode
       });
     }
   };
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      minHeight: '100vh',
-      margin: 0,
-      padding: 0
-    }}>
-      <AppBar position="static" sx={{ bgcolor: '#8B0000' }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, textAlign: 'center' }}>
-            Open The Page
-          </Typography>
-        </Toolbar>
-      </AppBar>
-
-      <Container maxWidth="md" sx={{ mt: 4, flexGrow: 1 }}>
-        <Grid container spacing={4} direction="column" alignItems="center">
-          <Grid item xs={12} sx={{ textAlign: 'center', width: '100%' }}>
-            <Typography variant="h4" gutterBottom>
-              Next Run Time:
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        minHeight: '100vh',
+        margin: 0,
+        padding: 0
+      }}>
+        <AppBar position="static" sx={{ bgcolor: '#8B0000' }}>
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1, textAlign: 'center' }}>
+              Open The Page
             </Typography>
-            <Paper elevation={3} sx={{ p: 3, mb: 2, minWidth: 300 }}>
-              <Typography variant="h5">
-                {nextRunTime ? nextRunTime.toLocaleString() : 'Invalid cron expression'}
+            <IconButton sx={{ ml: 1 }} onClick={toggleDarkMode} color="inherit">
+              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
+          </Toolbar>
+        </AppBar>
+
+        <Container maxWidth="md" sx={{ mt: 4, flexGrow: 1 }}>
+          <Grid container spacing={4} direction="column" alignItems="center">
+            <Grid item xs={12} sx={{ textAlign: 'center', width: '100%' }}>
+              <Typography variant="h4" gutterBottom>
+                Next Run Time:
               </Typography>
-            </Paper>
-            {timeUntil && (
-              <Paper elevation={3} sx={{ p: 2, mb: 4, minWidth: 300 }}>
-                <Typography variant="h6" color="text.secondary">
-                  Time until next run:
-                </Typography>
-                <Typography variant="body1">
-                  {timeUntil.days > 0 && `${timeUntil.days}d `}
-                  {timeUntil.hours}h {timeUntil.minutes}m {timeUntil.seconds}s
+              <Paper elevation={3} sx={{ p: 3, mb: 2, minWidth: 300 }}>
+                <Typography variant="h5">
+                  {nextRunTime ? nextRunTime.toLocaleString() : 'Invalid cron expression'}
                 </Typography>
               </Paper>
-            )}
-          </Grid>
+              {timeUntil && (
+                <Paper elevation={3} sx={{ p: 2, mb: 4, minWidth: 300 }}>
+                  <Typography variant="h6" color="text.secondary">
+                    Time until next run:
+                  </Typography>
+                  <Typography variant="body1">
+                    {timeUntil.days > 0 && `${timeUntil.days}d `}
+                    {timeUntil.hours}h {timeUntil.minutes}m {timeUntil.seconds}s
+                  </Typography>
+                </Paper>
+              )}
+            </Grid>
 
-          <Grid item xs={12} sx={{ width: '100%' }}>
-            <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Cron Expression"
-                    value={cronExpression}
-                    onChange={(e) => updateCronExpression(e.target.value)}
-                    placeholder="Enter cron expression (e.g. */5 * * * *)"
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Add URL"
-                    value={newUrl}
-                    onChange={(e) => setNewUrl(e.target.value)}
-                    placeholder="https://example.com"
-                    variant="outlined"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={addPage}
-                    sx={{ bgcolor: '#8B0000', '&:hover': { bgcolor: '#660000' } }}
-                  >
-                    Add Page
-                  </Button>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} sx={{ width: '100%' }}>
-            <Paper elevation={3} sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Scheduled Pages:
-              </Typography>
-              <List>
-                {pages.map((page) => (
-                  <ListItem key={page.id} divider>
-                    <ListItemText
-                      primary={page.url}
-                      secondary={page.lastOpened ? `Last opened: ${page.lastOpened.toLocaleString()}` : 'Never opened'}
+            <Grid item xs={12} sx={{ width: '100%' }}>
+              <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Cron Expression"
+                      value={cronExpression}
+                      onChange={(e) => updateCronExpression(e.target.value)}
+                      placeholder="Enter cron expression (e.g. */5 * * * *)"
+                      variant="outlined"
                     />
-                    <ListItemSecondaryAction>
-                      <IconButton edge="end" onClick={() => page.id && removePage(page.id)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-              </List>
-            </Paper>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Add URL"
+                      value={newUrl}
+                      onChange={(e) => setNewUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      variant="outlined"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={addPage}
+                      sx={{ bgcolor: '#8B0000', '&:hover': { bgcolor: '#660000' } }}
+                    >
+                      Add Page
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} sx={{ width: '100%' }}>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Scheduled Pages:
+                </Typography>
+                <List>
+                  {pages.map((page) => (
+                    <ListItem key={page.id} divider>
+                      <ListItemText
+                        primary={page.url}
+                        secondary={page.lastOpened ? `Last opened: ${page.lastOpened.toLocaleString()}` : 'Never opened'}
+                      />
+                      <ListItemSecondaryAction>
+                        <IconButton edge="end" onClick={() => page.id && removePage(page.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            </Grid>
           </Grid>
-        </Grid>
-      </Container>
-    </Box>
+        </Container>
+      </Box>
+    </ThemeProvider>
   );
 }
 
