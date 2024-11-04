@@ -120,7 +120,7 @@ function App() {
       if (now >= nextRunTime) {
         const pageToVisit = getNextPageToVisit(pages);
         if (pageToVisit && pageToVisit.id) {
-          window.location.href = pageToVisit.url;
+          window.open(pageToVisit.url, '_blank');
           db.pages.update(pageToVisit.id, {
             ...pageToVisit,
             lastOpened: new Date()
