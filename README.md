@@ -1,50 +1,15 @@
-# React + TypeScript + Vite
+# Open the Page
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+My kids like to watch cartoons on Saturday mornings. We don't want to wake up to turn on the TV, but we don't want them to accidentally open up an inapproriate show while we're still asleep. So I created this tool to open up a random show that they like each Saturday at 7am.
 
-Currently, two official plugins are available:
+## Scheduling Functionality
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project includes functionality to open pages on a schedule using cron expressions. The scheduling functionality is implemented using the `cron-parser` library. Users can specify a cron expression to define the schedule, and the application will open the specified pages based on that schedule.
 
-## Expanding the ESLint configuration
+## Fully Client-Side
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+This project is fully client-side, utilizing React, TypeScript, and Vite. All the scheduling and page opening functionality is handled on the client side without any server-side components.
 
-- Configure the top-level `parserOptions` property like this:
+## Created Using Claude via Cline and Github's Copilot
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+This project was created entirely using Anthropic's Claude 3.5 via Cline and Github's Copilot feature. This project was built as an experiment and a way to learn a new tool.
